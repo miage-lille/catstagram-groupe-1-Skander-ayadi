@@ -1,39 +1,55 @@
 import { Loop, liftState } from 'redux-loop';
 import { compose } from 'redux';
-import { Actions } from './types/actions.type';
+import { CloseModal, Decrement, Increment, SelectPicture } from './types/actions.type';
+import { Picture } from './types/picture.type';
 
-export type State = unknown; // TODO : Update this type !
 
-export const defaultState = {}; // TODO : Update this value !
 
-export const reducer = (state: State | undefined, action: Actions): State | Loop<State> => {
-  if (!state) return defaultState; // mandatory by redux
+
+export type State = {
+  counter: number;
+  pictures: Picture[];
+  selectedPicture: Picture | null;
+};
+
+export const defaultState: State = {
+  counter: 0,
+  pictures: [],
+  selectedPicture: null,
+}
+
+type Actions = | Increment | Decrement | SelectPicture | CloseModal
+
+export const reducer = (state: State | undefined, action: Actions) : State => {
+
+  if (!state) return defaultState;
+
+  let counter = state.counter;
+  if(counter > 3){
+    throw 'Counter cannot be greater than 3';
+  }
   switch (action.type) {
     case 'INCREMENT':
-      throw 'Not Implemented';
+      return { ...state, counter: state.counter + 1, pictures: new Array(state.counter + 1).fill({})};
     case 'DECREMENT':
-      throw 'Not Implemented';
+      return { ...state, counter: state.counter - 1, pictures: new Array(state.counter - 1).fill({})};
     case 'SELECT_PICTURE':
-      throw 'Not Implemented';
+      return { ...state, selectedPicture: action.picture };
     case 'CLOSE_MODAL':
-      throw 'Not Implemented';
-    case 'FETCH_CATS_REQUEST':
-      throw 'Not Implemented';
-    case 'FETCH_CATS_COMMIT':
-      throw 'Not Implemented';
-    case 'FETCH_CATS_ROLLBACK':
-      throw 'Not Implemented';
+      return { ...state, selectedPicture: null };
   }
-};
+
+
+}
 
 export const counterSelector = (state: State) => {
-  throw 'Not Implemented';
+  return state.counter;
 };
 export const picturesSelector = (state: State) => {
-  throw 'Not Implemented';
+  return state.pictures;
 };
 export const getSelectedPicture = (state: State) => {
-  throw 'Not Implemented';
+  return state.selectedPicture;
 };
 
 export default compose(liftState, reducer);

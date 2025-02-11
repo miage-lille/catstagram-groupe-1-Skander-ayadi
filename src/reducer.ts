@@ -23,14 +23,10 @@ export const defaultState: State = {
 type Actions = Increment | Decrement | SelectPicture | CloseModal | FetchCatsCommit | FetchCatsRollback | FetchCatsRequest;
 
 
-export const reducer = (state: State | undefined, action: Actions) : State | Loop<State> => {
-
+export const reducer = (state: State | undefined, action: Actions): State | Loop<State> => {
   if (!state) return defaultState;
 
-  let counter = state.counter;
-
   switch (action.type) {
-
     case "INCREMENT":
       return loop(
         { ...state, counter: state.counter + 1, pictures: loading() },
@@ -38,10 +34,12 @@ export const reducer = (state: State | undefined, action: Actions) : State | Loo
       );
 
     case "DECREMENT":
-      return state.counter > 3 ? loop(
-        { ...state, counter: state.counter - 1, pictures: loading() },
-        cmdFetch(fetchCatsRequest(state.counter - 1))
-      ) : state;
+      return state.counter > 3
+        ? loop(
+          { ...state, counter: state.counter - 1, pictures: loading() },
+          cmdFetch(fetchCatsRequest(state.counter - 1))
+        )
+        : state;
 
     case "SELECT_PICTURE":
       return { ...state, pictureSelected: some(action.picture) };
@@ -49,21 +47,21 @@ export const reducer = (state: State | undefined, action: Actions) : State | Loo
     case "CLOSE_MODAL":
       return { ...state, pictureSelected: none };
 
-    case 'FETCH_CATS_REQUEST':
-      return { ...state, pictures: { status: 'loading' } };
+    case "FETCH_CATS_REQUEST":
+      return loop(
+        { ...state, pictures: loading() },
+        cmdFetch(action)
+      );
 
     case "FETCH_CATS_COMMIT":
       return {
         ...state,
-        pictures: success(action.payload)
+        pictures: success(action.payload),
       };
 
     case "FETCH_CATS_ROLLBACK":
       return loop(
-        {
-          ...state,
-          pictures: failure(action.error.message) }
-        ,
+        { ...state, pictures: failure(action.error.message) },
         Cmd.run(() => console.error(action.error.message))
       );
 
@@ -71,6 +69,7 @@ export const reducer = (state: State | undefined, action: Actions) : State | Loo
       return state;
   }
 };
+
 
 
 export const counterSelector = (state: State) => {

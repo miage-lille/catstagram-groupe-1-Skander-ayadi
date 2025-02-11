@@ -6,17 +6,18 @@ import { ApiStatus } from './types/api.type';
 import { failure, loading, success } from './api';
 import { fetchCatsRequest } from './actions';
 import { cmdFetch } from './commands';
+import { Option, none, some} from 'fp-ts/Option';
 
 export type State = {
   counter: number;
   pictures: ApiStatus;
-  selectedPicture: Picture | null;
+  pictureSelected: Option<Picture>;
 };
 
 export const defaultState: State = {
   counter: 3,
   pictures: success([]),
-  selectedPicture: null,
+  pictureSelected: none
 };
 
 type Actions = Increment | Decrement | SelectPicture | CloseModal | FetchCatsCommit | FetchCatsRollback | FetchCatsRequest;
@@ -28,10 +29,6 @@ export const reducer = (state: State | undefined, action: Actions) : State | Loo
 
   let counter = state.counter;
 
-  if(counter < 3){
-    throw 'Counter cannot be below 3';
-  }
-
   switch (action.type) {
 
     case "INCREMENT":
@@ -41,16 +38,19 @@ export const reducer = (state: State | undefined, action: Actions) : State | Loo
       );
 
     case "DECREMENT":
-      return loop(
+      return state.counter > 3 ? loop(
         { ...state, counter: state.counter - 1, pictures: loading() },
         cmdFetch(fetchCatsRequest(state.counter - 1))
-      );
+      ) : state;
 
     case "SELECT_PICTURE":
-      return { ...state, selectedPicture: action.picture };
+      return { ...state, pictureSelected: some(action.picture) };
 
     case "CLOSE_MODAL":
-      return { ...state, selectedPicture: null };
+      return { ...state, pictureSelected: none };
+
+    case 'FETCH_CATS_REQUEST':
+      return { ...state, pictures: { status: 'loading' } };
 
     case "FETCH_CATS_COMMIT":
       return {
@@ -80,7 +80,7 @@ export const picturesSelector = (state: State) => {
   return state.pictures;
 };
 export const getSelectedPicture = (state: State) => {
-  return state.selectedPicture;
+  return state.pictureSelected;
 };
 
 export default compose(liftState, reducer);

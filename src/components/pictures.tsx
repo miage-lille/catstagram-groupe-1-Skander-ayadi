@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getSelectedPicture, picturesSelector } from '../reducer';
 import { closeModal, selectPicture } from '../actions';
 import ModalPortal from './modal';
+import { isSome } from 'fp-ts/Option';
 
 const Container = styled.div`
   padding: 1rem;
@@ -36,8 +37,8 @@ const Pictures = () => {
           onClick={() => dispatch(selectPicture(picture))}
         />
       ))}
-      {selectedPicture && (
-        <ModalPortal largeFormat={selectedPicture.largeFormat} close={() => dispatch(closeModal())} />
+      {isSome(selectedPicture) && (
+        <ModalPortal largeFormat={selectedPicture.value.largeFormat} close={() => dispatch(closeModal())} />
       )}
     </Container>
   );

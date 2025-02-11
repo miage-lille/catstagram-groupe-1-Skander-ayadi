@@ -40,7 +40,7 @@ const Counter = () => {
   const dispatch = useDispatch();
   return (
     <Container>
-      <Button onClick={() => dispatch(decrement())} disabled={counter != 3}> - </Button>
+      <Button onClick={() => dispatch(decrement())} disabled={counter == 3}> - </Button>
       <DisplayCounter>{counter}</DisplayCounter>
       <Button onClick={() => dispatch(increment())}> + </Button>
     </Container>

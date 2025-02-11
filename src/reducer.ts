@@ -1,46 +1,77 @@
-import { Loop, liftState } from 'redux-loop';
+import { liftState, loop, Cmd, Loop } from 'redux-loop';
 import { compose } from 'redux';
-import { CloseModal, Decrement, Increment, SelectPicture } from './types/actions.type';
+import { CloseModal, Decrement, Increment, SelectPicture, FetchCatsCommit, FetchCatsRollback, FetchCatsRequest } from './types/actions.type';
 import { Picture } from './types/picture.type';
-
-
-
+import { ApiStatus } from './types/api.type';
+import { failure, loading, success } from './api';
+import { fetchCatsRequest } from './actions';
+import { cmdFetch } from './commands';
 
 export type State = {
   counter: number;
-  pictures: Picture[];
+  pictures: ApiStatus;
   selectedPicture: Picture | null;
 };
 
 export const defaultState: State = {
-  counter: 0,
-  pictures: [],
+  counter: 3,
+  pictures: success([]),
   selectedPicture: null,
-}
+};
 
-type Actions = | Increment | Decrement | SelectPicture | CloseModal
+type Actions = Increment | Decrement | SelectPicture | CloseModal | FetchCatsCommit | FetchCatsRollback | FetchCatsRequest;
 
-export const reducer = (state: State | undefined, action: Actions) : State => {
+
+export const reducer = (state: State | undefined, action: Actions) : State | Loop<State> => {
 
   if (!state) return defaultState;
 
   let counter = state.counter;
-  if(counter > 3){
-    throw 'Counter cannot be greater than 3';
+
+  if(counter < 3){
+    throw 'Counter cannot be below 3';
   }
+
   switch (action.type) {
-    case 'INCREMENT':
-      return { ...state, counter: state.counter + 1, pictures: new Array(state.counter + 1).fill({})};
-    case 'DECREMENT':
-      return { ...state, counter: state.counter - 1, pictures: new Array(state.counter - 1).fill({})};
-    case 'SELECT_PICTURE':
+
+    case "INCREMENT":
+      return loop(
+        { ...state, counter: state.counter + 1, pictures: loading() },
+        cmdFetch(fetchCatsRequest(state.counter + 1))
+      );
+
+    case "DECREMENT":
+      return loop(
+        { ...state, counter: state.counter - 1, pictures: loading() },
+        cmdFetch(fetchCatsRequest(state.counter - 1))
+      );
+
+    case "SELECT_PICTURE":
       return { ...state, selectedPicture: action.picture };
-    case 'CLOSE_MODAL':
+
+    case "CLOSE_MODAL":
       return { ...state, selectedPicture: null };
+
+    case "FETCH_CATS_COMMIT":
+      return {
+        ...state,
+        pictures: success(action.payload)
+      };
+
+    case "FETCH_CATS_ROLLBACK":
+      return loop(
+        {
+          ...state,
+          pictures: failure(action.error.message) }
+        ,
+        Cmd.run(() => console.error(action.error.message))
+      );
+
+    default:
+      return state;
   }
+};
 
-
-}
 
 export const counterSelector = (state: State) => {
   return state.counter;

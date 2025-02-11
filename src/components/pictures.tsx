@@ -2,7 +2,6 @@ import React from 'react';
 import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSelectedPicture, picturesSelector } from '../reducer';
-import Modal from './modal';
 import { closeModal, selectPicture } from '../actions';
 import ModalPortal from './modal';
 
@@ -29,8 +28,13 @@ const Pictures = () => {
 
   return (
     <Container>
-      {pictures.map((picture, index) => (
-        <Image key={index} src={picture.previewFormat} alt={`Picture ${index + 1}`} onClick={() => dispatch(selectPicture(picture))} />
+      {pictures.status === 'success' && pictures.data.map((picture, index) => (
+        <Image
+          key={index}
+          src={picture.previewFormat}
+          alt={`Picture ${index + 1}`}
+          onClick={() => dispatch(selectPicture(picture))}
+        />
       ))}
       {selectedPicture && (
         <ModalPortal largeFormat={selectedPicture.largeFormat} close={() => dispatch(closeModal())} />
